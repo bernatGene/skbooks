@@ -42,6 +42,28 @@ class Category(CategoryBase, table=True):
     )
 
 
+class BookcaseBase(SQLModel):
+    name: str = Field(index=True, unique=True)
+
+
+class Bookcase(BookcaseBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    shelves: list["Shelf"] = Relationship(back_populates="bookcase")
+
+
+class ShelfBase(SQLModel):
+    # A shelf is identified by its position in the bookcase
+    # and the bookcase it belongs to.
+    number: int
+    bookcase_id: int | None = Field(default=None, foreign_key="bookcase.id")
+
+
+class Shelf(ShelfBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    bookcase: "Bookcase" = Relationship(back_populates="shelves")
+    books: list["Book"] = Relationship(back_populates="shelf")
+
+
 class BookBase(SQLModel):
     title: str
     subtitle: str | None = None
@@ -53,7 +75,8 @@ class BookBase(SQLModel):
     language: str | None = None
     description: str | None = None
     image_link: str | None = None
-    physical_location: str | None = Field(default=None, index=True)
+    # A book can be in a shelf, or not.
+    shelf_id: int | None = Field(default=None, foreign_key="shelf.id")
 
 
 class Book(BookBase, table=True):
@@ -64,6 +87,7 @@ class Book(BookBase, table=True):
     categories: list[Category] = Relationship(
         back_populates="books", link_model=BookCategoryLink
     )
+    shelf: Shelf | None = Relationship(back_populates="books")
 
 
 # --- Public Models (for API) ---
@@ -77,18 +101,58 @@ class CategoryRead(CategoryBase):
     id: int
 
 
+class BookcaseRead(BookcaseBase):
+    id: int
+
+
+class ShelfRead(ShelfBase):
+    id: int
+
+
 class BookRead(BookBase):
     id: int
+
+
+class BookcaseReadWithShelves(BookcaseRead):
+    shelves: list[ShelfRead] = []
+
+
+class ShelfReadWithBooks(ShelfRead):
+    books: list[BookRead] = []
 
 
 class BookReadWithDetails(BookRead):
     authors: list[AuthorRead] = []
     categories: list[CategoryRead] = []
+    shelf: ShelfRead | None = None
+
+
+# --- Create Models ---
+
+
+class BookcaseCreate(BookcaseBase):
+    pass
+
+
+class ShelfCreate(ShelfBase):
+    pass
 
 
 class BookCreate(BookBase):
     authors: list[str] = []
     categories: list[str] = []
+
+
+# --- Update Models ---
+
+
+class BookcaseUpdate(SQLModel):
+    name: str | None = None
+
+
+class ShelfUpdate(SQLModel):
+    number: int | None = None
+    bookcase_id: int | None = None
 
 
 class BookUpdate(SQLModel):
@@ -102,6 +166,6 @@ class BookUpdate(SQLModel):
     language: str | None = None
     description: str | None = None
     image_link: str | None = None
-    physical_location: str | None = None
+    shelf_id: int | None = None
     authors: list[str] | None = None
     categories: list[str] | None = None
