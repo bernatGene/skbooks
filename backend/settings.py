@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     """Reads settings from .env file"""
 
     DB_FILE: str = "skbooks.db"
+    GOOGLE_API_KEY: str | None = None
 
     @property
     def DB_URL(self) -> str:

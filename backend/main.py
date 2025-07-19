@@ -6,6 +6,8 @@ from fastapi.routing import APIRoute
 
 from crud import router as books_router
 from database import engine
+from isbn import get_book_info_by_isbn
+from models import BookInfo
 
 
 @asynccontextmanager
@@ -41,6 +43,13 @@ app.add_middleware(
 
 
 app.include_router(books_router, prefix="/api")
+
+
+@app.get("/api/isbn/{isbn}", response_model=BookInfo)
+async def get_book_by_isbn(isbn: str):
+    """gets book info by isbn"""
+    return await get_book_info_by_isbn(isbn)
+
 
 
 @app.get("/")

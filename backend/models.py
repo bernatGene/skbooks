@@ -169,3 +169,15 @@ class BookUpdate(SQLModel):
     shelf_id: int | None = None
     authors: list[str] | None = None
     categories: list[str] | None = None
+
+
+# --- Google Books API ---
+
+
+class BookInfo(SQLModel):
+    title: str
+    authors: list[str]
+    publisher: str | None = None
+    published_date: str | None = None
+    thumbnail: str | None = None
+    identifier: str
