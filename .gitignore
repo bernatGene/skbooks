@@ -24,5 +24,6 @@ vite.config.ts.timestamp-*
 
 # gemini
 GEMINI.md
-PROMPT.md
+prompts/
+backend/context/
 

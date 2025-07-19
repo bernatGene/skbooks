@@ -1,9 +1,11 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from backend.database import get_session
-from backend.models import (
+from database import get_session
+from models import (
     Author,
     Book,
     BookCreate,
@@ -15,8 +17,11 @@ from backend.models import (
 
 router = APIRouter()
 
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+
 @router.post("/books/", response_model=BookReadWithDetails)
-async def create_book(*, session: AsyncSession = Depends(get_session), book_in: BookCreate):
+async def create_book(book_in: BookCreate, session: SessionDep):
     """
     Create a new book, along with authors and categories if they don't exist.
     """
@@ -46,10 +51,10 @@ async def create_book(*, session: AsyncSession = Depends(get_session), book_in: 
     await session.refresh(db_book)
     return db_book
 
+
 @router.get("/books/", response_model=list[BookRead])
 async def read_books(
-    *,
-    session: AsyncSession = Depends(get_session),
+    session: SessionDep,
     offset: int = 0,
     limit: int = 100,
 ):
@@ -61,8 +66,9 @@ async def read_books(
     books = result.all()
     return books
 
+
 @router.get("/books/{book_id}", response_model=BookReadWithDetails)
-async def read_book(*, session: AsyncSession = Depends(get_session), book_id: int):
+async def read_book(book_id: int, session: SessionDep):
     """
     Retrieve a single book by its ID.
     """
@@ -71,12 +77,12 @@ async def read_book(*, session: AsyncSession = Depends(get_session), book_id: in
         raise HTTPException(status_code=404, detail="Book not found")
     return book
 
+
 @router.patch("/books/{book_id}", response_model=BookReadWithDetails)
 async def update_book(
-    *,
-    session: AsyncSession = Depends(get_session),
     book_id: int,
     book_in: BookUpdate,
+    session: SessionDep,
 ):
     """
     Update a book's details.
@@ -86,7 +92,7 @@ async def update_book(
         raise HTTPException(status_code=404, detail="Book not found")
 
     book_data = book_in.model_dump(exclude_unset=True)
-    
+
     # Handle non-relationship fields
     for key, value in book_data.items():
         if key not in ["authors", "categories"]:
@@ -121,8 +127,9 @@ async def update_book(
     await session.refresh(db_book)
     return db_book
 
+
 @router.delete("/books/{book_id}")
-async def delete_book(*, session: AsyncSession = Depends(get_session), book_id: int):
+async def delete_book(book_id: int, session: SessionDep):
     """
     Delete a book.
     """

@@ -1,30 +1,46 @@
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 # --- Link Tables ---
 
+
 class BookAuthorLink(SQLModel, table=True):
     book_id: int | None = Field(default=None, foreign_key="book.id", primary_key=True)
-    author_id: int | None = Field(default=None, foreign_key="author.id", primary_key=True)
+    author_id: int | None = Field(
+        default=None, foreign_key="author.id", primary_key=True
+    )
+
 
 class BookCategoryLink(SQLModel, table=True):
     book_id: int | None = Field(default=None, foreign_key="book.id", primary_key=True)
-    category_id: int | None = Field(default=None, foreign_key="category.id", primary_key=True)
+    category_id: int | None = Field(
+        default=None, foreign_key="category.id", primary_key=True
+    )
+
 
 # --- Main Models ---
+
 
 class AuthorBase(SQLModel):
     name: str = Field(index=True, unique=True)
 
+
 class Author(AuthorBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    books: list["Book"] = Relationship(back_populates="authors", link_model=BookAuthorLink)
+    books: list["Book"] = Relationship(
+        back_populates="authors", link_model=BookAuthorLink
+    )
+
 
 class CategoryBase(SQLModel):
     name: str = Field(index=True, unique=True)
 
+
 class Category(CategoryBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    books: list["Book"] = Relationship(back_populates="categories", link_model=BookCategoryLink)
+    books: list["Book"] = Relationship(
+        back_populates="categories", link_model=BookCategoryLink
+    )
+
 
 class BookBase(SQLModel):
     title: str
@@ -39,29 +55,41 @@ class BookBase(SQLModel):
     image_link: str | None = None
     physical_location: str | None = Field(default=None, index=True)
 
+
 class Book(BookBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    authors: list[Author] = Relationship(back_populates="books", link_model=BookAuthorLink)
-    categories: list[Category] = Relationship(back_populates="books", link_model=BookCategoryLink)
+    authors: list[Author] = Relationship(
+        back_populates="books", link_model=BookAuthorLink
+    )
+    categories: list[Category] = Relationship(
+        back_populates="books", link_model=BookCategoryLink
+    )
+
 
 # --- Public Models (for API) ---
+
 
 class AuthorRead(AuthorBase):
     id: int
 
+
 class CategoryRead(CategoryBase):
     id: int
 
+
 class BookRead(BookBase):
     id: int
+
 
 class BookReadWithDetails(BookRead):
     authors: list[AuthorRead] = []
     categories: list[CategoryRead] = []
 
+
 class BookCreate(BookBase):
     authors: list[str] = []
     categories: list[str] = []
+
 
 class BookUpdate(SQLModel):
     title: str | None = None
