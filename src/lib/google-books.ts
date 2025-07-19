@@ -44,9 +44,8 @@ export async function getBookInfoByISBN(isbn: string): Promise<BookInfo> {
 				thumbnail: volumeInfo.imageLinks?.thumbnail || UNKNOWN_BOOK.thumbnail,
 				identifier: isbn
 			};
-		} else {
-			return { ...UNKNOWN_BOOK, identifier: isbn, title: 'Book Not Found' };
 		}
+		return { ...UNKNOWN_BOOK, identifier: isbn, title: 'Book Not Found' };
 	} catch (error) {
 		console.error('Error fetching book info:', error);
 		return { ...UNKNOWN_BOOK, identifier: isbn, title: 'Error Fetching Data' };

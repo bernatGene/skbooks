@@ -11,7 +11,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"lint": "prettier --check . && eslint .",
+		"openapi": "npx openapi-ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
@@ -32,9 +33,11 @@
 		"tailwindcss": "^4.0.0",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.20.0",
-		"vite": "^7.0.4"
+		"vite": "^7.0.4",
+		"@hey-api/openapi-ts": "^0.72.2"
 	},
 	"dependencies": {
+		"@hey-api/client-fetch": "^0.13.1",
 		"@zxing/library": "^0.21.3"
 	}
 }
