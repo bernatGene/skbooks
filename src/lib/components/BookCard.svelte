@@ -19,7 +19,14 @@
 </script>
 
 {#await book}
-	<p class="animate-ping">{isbn}</p>
+	<div class="flex h-full flex-col items-center justify-center rounded-lg bg-gray-200 p-4 shadow-md">
+		<div class="relative flex h-32 w-full items-center justify-center rounded bg-gray-300">
+			<span class="icon-[mdi--loading] size-8 animate-spin text-gray-500"></span>
+		</div>
+		<div class="mt-2 h-4 w-3/4 rounded bg-gray-300"></div>
+		<div class="mt-2 h-3 w-1/2 rounded bg-gray-300"></div>
+		<p class="mt-2 text-xs text-gray-500">{isbn}</p>
+	</div>
 {:then book}
 	<div
 		class="cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300"

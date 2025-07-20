@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { getBookByIsbnGet } from '$lib/client/sdk.gen';
 	import type { BookInfo } from '$lib/client/types.gen';
-	import BookCard from '$lib/components/BookCard.svelte';
 	import BarcodeScanner from '$lib/components/BarcodeScanner.svelte';
+	import ScannedBookGallery from '$lib/components/ScannedBookGallery.svelte';
 
-	const books = $state<Promise<BookInfo>[]>([]);
+	const books = $state<{ isbn: string; bookPromise: Promise<BookInfo> }[]>([]);
 	const scannedBarcodes = new Set<string>();
 	let scannedIsbn = $state('');
 
@@ -13,14 +13,13 @@
 		if (data) return data;
 		throw error;
 	};
-	let fetchInfo: null | Promise<BookInfo> = $state(null);
 
 	$effect(() => {
-		async function handleNewIsbn() {
+		function handleNewIsbn() {
 			if (scannedIsbn && !scannedBarcodes.has(scannedIsbn)) {
 				scannedBarcodes.add(scannedIsbn);
-				fetchInfo = fetchBookInfo(scannedIsbn);
-				books.push(fetchInfo);
+				const bookPromise = fetchBookInfo(scannedIsbn);
+				books.push({ isbn: scannedIsbn, bookPromise });
 			}
 		}
 		handleNewIsbn();
@@ -32,14 +31,5 @@
 
 	<BarcodeScanner bind:isbn={scannedIsbn} />
 
-	{#if books.length > 0}
-		<div class="w-full">
-			<h2 class="mb-4 text-center text-2xl font-semibold">Scanned Books</h2>
-			<div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-				{#each books as book}
-					<BookCard isbn={scannedIsbn} {book} />
-				{/each}
-			</div>
-		</div>
-	{/if}
+	<ScannedBookGallery {books} />
 </div>
