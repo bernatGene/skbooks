@@ -3,11 +3,19 @@ from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
 import httpx
+from rich.logging import RichHandler
 
 from models import BookInfo
 from settings import settings
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level="DEBUG",
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(rich_tracebacks=True)],
+)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 logger = logging.getLogger(__name__)
 
 
@@ -105,7 +113,7 @@ async def get_book_info_by_isbn(isbn: str) -> BookInfo:
                                         f"Found translators: {book_info.translators}"
                                     )
 
-            logger.debug(f"Final BookInfo: {book_info}")
+            logger.info(f"Final BookInfo: {book_info}")
             return book_info
 
         except httpx.HTTPStatusError as e:
