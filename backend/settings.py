@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,6 +9,8 @@ class Settings(BaseSettings):
 
     DB_FILE: str = "skbooks.db"
     GOOGLE_API_KEY: str | None = None
+    LOG_LEVEL: str = "INFO"
+    LOG_LEVELS: dict[str, str] = Field(default_factory=dict)
 
     @property
     def DB_URL(self) -> str:

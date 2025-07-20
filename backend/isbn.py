@@ -3,18 +3,9 @@ from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
 import httpx
-from rich.logging import RichHandler
 
 from models import BookInfo
 from settings import settings
-
-logging.basicConfig(
-    level="DEBUG",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(rich_tracebacks=True)],
-)
-logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 

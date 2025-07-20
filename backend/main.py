@@ -7,12 +7,14 @@ from fastapi.routing import APIRoute
 from crud import router as books_router
 from database import engine
 from isbn import get_book_info_by_isbn
+from logging_config import setup_logging
 from models import BookInfo
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # On startup
+    setup_logging()
     yield
     # On shutdown
     await engine.dispose()
