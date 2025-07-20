@@ -2,6 +2,8 @@
 
 import type { Options as ClientOptions, TDataShape, Client } from '@hey-api/client-fetch';
 import type {
+	ReadBookcasesWithCountsGetData,
+	ReadBookcasesWithCountsGetResponses,
 	ReadBooksGetData,
 	ReadBooksGetResponses,
 	ReadBooksGetErrors,
@@ -40,6 +42,23 @@ export type Options<
 	 * used to access values that aren't defined as part of the SDK function.
 	 */
 	meta?: Record<string, unknown>;
+};
+
+/**
+ * Read Bookcases With Counts
+ * Retrieve all bookcases with a count of shelves and books per shelf.
+ */
+export const readBookcasesWithCountsGet = <ThrowOnError extends boolean = false>(
+	options?: Options<ReadBookcasesWithCountsGetData, ThrowOnError>
+) => {
+	return (options?.client ?? _heyApiClient).get<
+		ReadBookcasesWithCountsGetResponses,
+		unknown,
+		ThrowOnError
+	>({
+		url: '/api/bookcases/',
+		...options
+	});
 };
 
 /**

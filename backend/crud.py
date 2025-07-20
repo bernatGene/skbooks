@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -8,16 +9,64 @@ from database import get_session
 from models import (
     Author,
     Book,
+    Bookcase,
+    BookcaseReadWithCounts,
     BookCreate,
     BookRead,
     BookReadWithDetails,
     BookUpdate,
     Category,
+    Shelf,
+    ShelfReadWithBookCount,
 )
 
 router = APIRouter()
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+
+@router.get("/bookcases/", response_model=list[BookcaseReadWithCounts])
+async def read_bookcases_with_counts(session: SessionDep):
+    """
+    Retrieve all bookcases with a count of shelves and books per shelf.
+    """
+    book_count_subquery = (
+        select(Shelf.id.label("shelf_id"), func.count(Book.id).label("book_count"))
+        .join(Book, Shelf.id == Book.shelf_id, isouter=True)
+        .group_by(Shelf.id)
+        .subquery()
+    )
+
+    statement = (
+        select(Bookcase, Shelf, book_count_subquery.c.book_count)
+        .join(Shelf, Bookcase.id == Shelf.bookcase_id)
+        .join(
+            book_count_subquery,
+            Shelf.id == book_count_subquery.c.shelf_id,
+            isouter=True,
+        )
+        .order_by(Bookcase.id, Shelf.number)
+    )
+
+    result = await session.exec(statement)
+
+    bookcases_map = {}
+    for bookcase, shelf, book_count in result:
+        if bookcase.id not in bookcases_map:
+            bookcases_map[bookcase.id] = BookcaseReadWithCounts(
+                id=bookcase.id, name=bookcase.name, shelves=[]
+            )
+
+        bookcases_map[bookcase.id].shelves.append(
+            ShelfReadWithBookCount(
+                id=shelf.id,
+                number=shelf.number,
+                bookcase_id=shelf.bookcase_id,
+                book_count=book_count or 0,
+            )
+        )
+
+    return list(bookcases_map.values())
 
 
 @router.post("/books/", response_model=BookReadWithDetails)

@@ -160,6 +160,14 @@ class BookcaseReadWithShelves(BookcaseRead):
     shelves: list[ShelfRead] = []
 
 
+class ShelfReadWithBookCount(ShelfRead):
+    book_count: int
+
+
+class BookcaseReadWithCounts(BookcaseRead):
+    shelves: list[ShelfReadWithBookCount] = []
+
+
 class ShelfReadWithBooks(ShelfRead):
     books: list[BookRead] = []
 

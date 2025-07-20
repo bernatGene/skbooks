@@ -19,6 +19,28 @@ export type ValidationError = {
 };
 
 /**
+ * ShelfReadWithBookCount
+ */
+export type ShelfReadWithBookCount = {
+	/**
+	 * Number
+	 */
+	number: number;
+	/**
+	 * Bookcase Id
+	 */
+	bookcase_id?: number | null;
+	/**
+	 * Id
+	 */
+	id: number;
+	/**
+	 * Book Count
+	 */
+	book_count: number;
+};
+
+/**
  * ShelfRead
  */
 export type ShelfRead = {
@@ -76,6 +98,24 @@ export type CategoryRead = {
 	 * Id
 	 */
 	id: number;
+};
+
+/**
+ * BookcaseReadWithCounts
+ */
+export type BookcaseReadWithCounts = {
+	/**
+	 * Name
+	 */
+	name: string;
+	/**
+	 * Id
+	 */
+	id: number;
+	/**
+	 * Shelves
+	 */
+	shelves?: Array<ShelfReadWithBookCount>;
 };
 
 /**
@@ -435,6 +475,24 @@ export type BookCreate = {
 	 */
 	publisher?: string | null;
 };
+
+export type ReadBookcasesWithCountsGetData = {
+	body?: never;
+	path?: never;
+	query?: never;
+	url: '/api/bookcases/';
+};
+
+export type ReadBookcasesWithCountsGetResponses = {
+	/**
+	 * Response Read Bookcases With Counts Api Bookcases  Get
+	 * Successful Response
+	 */
+	200: Array<BookcaseReadWithCounts>;
+};
+
+export type ReadBookcasesWithCountsGetResponse =
+	ReadBookcasesWithCountsGetResponses[keyof ReadBookcasesWithCountsGetResponses];
 
 export type ReadBooksGetData = {
 	body?: never;
