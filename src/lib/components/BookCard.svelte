@@ -1,15 +1,6 @@
 <script lang="ts">
 	import type { BookInfo } from '$lib/client/types.gen';
 
-	const UNKNOWN_BOOK: BookInfo = {
-		title: 'Unknown Title',
-		authors: ['Unknown Author'],
-		publisher: 'Unknown Publisher',
-		published_date: 'Unknown Date',
-		thumbnail: '/no-image-placeholder.svg',
-		identifier: ''
-	};
-
 	const { isbn, book }: { isbn: string; book: Promise<BookInfo> } = $props();
 	let expanded = $state(false);
 
@@ -19,7 +10,9 @@
 </script>
 
 {#await book}
-	<div class="flex h-full flex-col items-center justify-center rounded-lg bg-gray-200 p-4 shadow-md">
+	<div
+		class="flex h-full flex-col items-center justify-center rounded-lg bg-gray-200 p-4 shadow-md"
+	>
 		<div class="relative flex h-32 w-full items-center justify-center rounded bg-gray-300">
 			<span class="icon-[mdi--loading] size-8 animate-spin text-gray-500"></span>
 		</div>

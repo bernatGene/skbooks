@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        types_or: [python, pyi]
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  - repo: local
+    hooks:
+      - id: frontend-format-checks
+        name: Run frontend format
+        entry: bash -c 'npm run format'
+        language: system
+        files: '\.(ts|svelte)$'
+
+  - repo: local
+    hooks:
+      - id: frontend-svelte-checks
+        name: Run frontend check
+        entry: bash -c 'npm run check'
+        language: system
+        files: '\.(ts|svelte)$'

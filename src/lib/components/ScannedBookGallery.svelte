@@ -2,8 +2,7 @@
 	import type { BookInfo } from '$lib/client/types.gen';
 	import BookCard from './BookCard.svelte';
 
-	const { books }: { books: { isbn: string; bookPromise: Promise<BookInfo> }[] } =
-		$props();
+	const { books }: { books: { isbn: string; bookPromise: Promise<BookInfo> }[] } = $props();
 
 	let gallery: HTMLDivElement | undefined = $state();
 
