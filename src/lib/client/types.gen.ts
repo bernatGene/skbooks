@@ -37,6 +37,24 @@ export type ShelfRead = {
 };
 
 /**
+ * PublisherRead
+ */
+export type PublisherRead = {
+	/**
+	 * Name
+	 */
+	name: string;
+	/**
+	 * Id
+	 */
+	id: number;
+	/**
+	 * Aliases
+	 */
+	aliases?: Array<string>;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -81,10 +99,6 @@ export type BookUpdate = {
 	 */
 	isbn_10?: string | null;
 	/**
-	 * Publisher
-	 */
-	publisher?: string | null;
-	/**
 	 * Published Date
 	 */
 	published_date?: string | null;
@@ -109,13 +123,33 @@ export type BookUpdate = {
 	 */
 	shelf_id?: number | null;
 	/**
+	 * Publisher Id
+	 */
+	publisher_id?: number | null;
+	/**
 	 * Authors
 	 */
 	authors?: Array<string> | null;
 	/**
+	 * Translators
+	 */
+	translators?: Array<string> | null;
+	/**
 	 * Categories
 	 */
 	categories?: Array<string> | null;
+	/**
+	 * Is Translation
+	 */
+	is_translation?: boolean | null;
+	/**
+	 * Original Language
+	 */
+	original_language?: string | null;
+	/**
+	 * Translation Language
+	 */
+	translation_language?: string | null;
 };
 
 /**
@@ -139,10 +173,6 @@ export type BookReadWithDetails = {
 	 */
 	isbn_10?: string | null;
 	/**
-	 * Publisher
-	 */
-	publisher?: string | null;
-	/**
 	 * Published Date
 	 */
 	published_date?: string | null;
@@ -163,9 +193,25 @@ export type BookReadWithDetails = {
 	 */
 	image_link?: string | null;
 	/**
+	 * Is Translation
+	 */
+	is_translation?: boolean;
+	/**
+	 * Original Language
+	 */
+	original_language?: string | null;
+	/**
+	 * Translation Language
+	 */
+	translation_language?: string | null;
+	/**
 	 * Shelf Id
 	 */
 	shelf_id?: number | null;
+	/**
+	 * Publisher Id
+	 */
+	publisher_id?: number | null;
 	/**
 	 * Id
 	 */
@@ -175,10 +221,15 @@ export type BookReadWithDetails = {
 	 */
 	authors?: Array<AuthorRead>;
 	/**
+	 * Translators
+	 */
+	translators?: Array<AuthorRead>;
+	/**
 	 * Categories
 	 */
 	categories?: Array<CategoryRead>;
 	shelf?: ShelfRead | null;
+	publisher?: PublisherRead | null;
 };
 
 /**
@@ -216,10 +267,6 @@ export type BookRead = {
 	 */
 	isbn_10?: string | null;
 	/**
-	 * Publisher
-	 */
-	publisher?: string | null;
-	/**
 	 * Published Date
 	 */
 	published_date?: string | null;
@@ -240,9 +287,25 @@ export type BookRead = {
 	 */
 	image_link?: string | null;
 	/**
+	 * Is Translation
+	 */
+	is_translation?: boolean;
+	/**
+	 * Original Language
+	 */
+	original_language?: string | null;
+	/**
+	 * Translation Language
+	 */
+	translation_language?: string | null;
+	/**
 	 * Shelf Id
 	 */
 	shelf_id?: number | null;
+	/**
+	 * Publisher Id
+	 */
+	publisher_id?: number | null;
 	/**
 	 * Id
 	 */
@@ -277,6 +340,22 @@ export type BookInfo = {
 	 * Identifier
 	 */
 	identifier: string;
+	/**
+	 * Is Translation
+	 */
+	is_translation?: boolean;
+	/**
+	 * Translators
+	 */
+	translators?: Array<string>;
+	/**
+	 * Original Language
+	 */
+	original_language?: string | null;
+	/**
+	 * Translation Language
+	 */
+	translation_language?: string | null;
 };
 
 /**
@@ -300,10 +379,6 @@ export type BookCreate = {
 	 */
 	isbn_10?: string | null;
 	/**
-	 * Publisher
-	 */
-	publisher?: string | null;
-	/**
 	 * Published Date
 	 */
 	published_date?: string | null;
@@ -324,17 +399,41 @@ export type BookCreate = {
 	 */
 	image_link?: string | null;
 	/**
+	 * Is Translation
+	 */
+	is_translation?: boolean;
+	/**
+	 * Original Language
+	 */
+	original_language?: string | null;
+	/**
+	 * Translation Language
+	 */
+	translation_language?: string | null;
+	/**
 	 * Shelf Id
 	 */
 	shelf_id?: number | null;
+	/**
+	 * Publisher Id
+	 */
+	publisher_id?: number | null;
 	/**
 	 * Authors
 	 */
 	authors?: Array<string>;
 	/**
+	 * Translators
+	 */
+	translators?: Array<string>;
+	/**
 	 * Categories
 	 */
 	categories?: Array<string>;
+	/**
+	 * Publisher
+	 */
+	publisher?: string | null;
 };
 
 export type ReadBooksGetData = {
