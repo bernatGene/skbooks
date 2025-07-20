@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from '@zxing/library';
 	import { getBookByIsbnGet } from '$lib/client/sdk.gen';
 	import type { BookInfo } from '$lib/client/types.gen';
 	import BookCard from '$lib/components/BookCard.svelte';
+	import BarcodeScanner from '$lib/components/BarcodeScanner.svelte';
 
-	let video: HTMLVideoElement;
 	const books = $state<BookInfo[]>([]);
 	const scannedBarcodes = new Set<string>();
-	let codeReader: BrowserMultiFormatReader;
+	let scannedIsbn = $state('');
 
 	const UNKNOWN_BOOK: BookInfo = {
 		title: 'Unknown Title',
@@ -19,66 +17,32 @@
 		identifier: ''
 	};
 
-	onMount(() => {
-		const hints = new Map();
-		const formats = [BarcodeFormat.EAN_13];
-		hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
-		codeReader = new BrowserMultiFormatReader(hints);
+	$effect(() => {
+		async function handleNewIsbn() {
+			if (scannedIsbn && !scannedBarcodes.has(scannedIsbn)) {
+				scannedBarcodes.add(scannedIsbn);
+				const { data, error } = await getBookByIsbnGet({ path: { isbn: scannedIsbn } });
 
-		async function startDecoding() {
-			try {
-				await codeReader.decodeFromVideoDevice(null, video, async (result, err) => {
-					if (result) {
-						const barcode = result.getText();
-						if (!scannedBarcodes.has(barcode)) {
-							scannedBarcodes.add(barcode);
-							const { data, error } = await getBookByIsbnGet({ path: { isbn: barcode } });
-
-							if (error || !data) {
-								console.error('Error fetching book info:', error);
-								books.push({
-									...UNKNOWN_BOOK,
-									identifier: barcode,
-									title: 'Error Fetching Data'
-								});
-							} else {
-								books.push(data);
-							}
-						}
-					}
-					if (err) {
-						// zxing-js throws NotFoundException pretty often, so we swallow up the error
-						// unless we want to debug something.
-					}
-				});
-			} catch (err) {
-				console.error('Error starting video stream:', err);
-				alert('Could not start video stream. Please allow camera access and refresh the page.');
+				if (error || !data) {
+					console.error('Error fetching book info:', error);
+					books.push({
+						...UNKNOWN_BOOK,
+						identifier: scannedIsbn,
+						title: 'Error Fetching Data'
+					});
+				} else {
+					books.push(data);
+				}
 			}
 		}
-
-		startDecoding();
-
-		return () => {
-			codeReader?.reset();
-		};
+		handleNewIsbn();
 	});
 </script>
 
 <div class="container mx-auto flex max-w-4xl flex-col items-center gap-8 p-4">
 	<h1 class="text-3xl font-bold">Svelte Barcode Scanner</h1>
 
-	<div class="relative w-full max-w-2xl rounded-lg bg-black shadow-lg">
-		<!-- svelte-ignore a11y_media_has_caption -->
-		<video
-			bind:this={video}
-			autoplay
-			playsinline
-			class="aspect-video w-full rounded-md"
-			style="transform: scaleX(-1);"
-			aria-label="Webcam live feed"
-		></video>
-	</div>
+	<BarcodeScanner bind:isbn={scannedIsbn} />
 
 	{#if books.length > 0}
 		<div class="w-full">
