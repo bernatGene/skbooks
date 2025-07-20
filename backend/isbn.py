@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import httpx
 
 from models import BookInfo
@@ -21,7 +23,7 @@ async def get_book_info_by_isbn(isbn: str) -> BookInfo:
             update={"identifier": isbn, "title": "API Key Missing"}
         )
 
-    url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key={settings.GOOGLE_API_KEY}"
+    url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&projection=full&key={settings.GOOGLE_API_KEY}"
 
     async with httpx.AsyncClient() as client:
         try:
@@ -30,7 +32,18 @@ async def get_book_info_by_isbn(isbn: str) -> BookInfo:
             data = response.json()
 
             if data.get("totalItems", 0) > 0 and data.get("items"):
-                volume_info = data["items"][0].get("volumeInfo", {})
+                pprint(data)
+                volume_id = data["items"][0]["id"]
+
+                # 2. Fetch the specific volume by its ID for complete data
+                volume_url = f"https://www.googleapis.com/books/v1/volumes/{volume_id}?key={settings.GOOGLE_API_KEY}"
+                volume_response = await client.get(volume_url)
+                volume_data = volume_response.json()
+                pprint(volume_data)
+
+                volume_info = (
+                    data["items"][0].get("volumeInfo", {}) | volume_data["volumeInfo"]
+                )
                 return BookInfo(
                     title=volume_info.get("title", UNKNOWN_BOOK.title),
                     authors=volume_info.get("authors", UNKNOWN_BOOK.authors),
@@ -56,4 +69,3 @@ async def get_book_info_by_isbn(isbn: str) -> BookInfo:
             return UNKNOWN_BOOK.model_copy(
                 update={"identifier": isbn, "title": "Error Fetching Data"}
             )
-

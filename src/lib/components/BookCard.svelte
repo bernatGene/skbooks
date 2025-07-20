@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { BookInfo } from '$lib/google-books';
+	import type { BookInfo } from '$lib/client/types.gen';
 
-	let { book }: { book: BookInfo } = $props();
+	const { book }: { book: BookInfo } = $props();
 	let expanded = $state(false);
 
 	function toggleExpanded() {
@@ -29,7 +29,7 @@
 	{#if expanded}
 		<div class="border-t border-gray-200 p-2">
 			<p class="text-xs"><strong>Authors:</strong> {book.authors.join(', ')}</p>
-			<p class="text-xs"><strong>Published:</strong> {book.publishedDate}</p>
+			<p class="text-xs"><strong>Published:</strong> {book.published_date}</p>
 			<p class="text-xs"><strong>Publisher:</strong> {book.publisher}</p>
 			<p class="text-xs"><strong>ISBN:</strong> {book.identifier}</p>
 		</div>

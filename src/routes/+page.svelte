@@ -1,13 +1,23 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from '@zxing/library';
-	import { getBookInfoByISBN, type BookInfo } from '$lib/google-books';
+	import { getBookByIsbnGet } from '$lib/client/sdk.gen';
+	import type { BookInfo } from '$lib/client/types.gen';
 	import BookCard from '$lib/components/BookCard.svelte';
 
 	let video: HTMLVideoElement;
 	const books = $state<BookInfo[]>([]);
 	const scannedBarcodes = new Set<string>();
 	let codeReader: BrowserMultiFormatReader;
+
+	const UNKNOWN_BOOK: BookInfo = {
+		title: 'Unknown Title',
+		authors: ['Unknown Author'],
+		publisher: 'Unknown Publisher',
+		published_date: 'Unknown Date',
+		thumbnail: '/no-image-placeholder.svg',
+		identifier: ''
+	};
 
 	onMount(() => {
 		const hints = new Map();
@@ -22,8 +32,18 @@
 						const barcode = result.getText();
 						if (!scannedBarcodes.has(barcode)) {
 							scannedBarcodes.add(barcode);
-							const bookInfo = await getBookInfoByISBN(barcode);
-							books.push(bookInfo);
+							const { data, error } = await getBookByIsbnGet({ path: { isbn: barcode } });
+
+							if (error || !data) {
+								console.error('Error fetching book info:', error);
+								books.push({
+									...UNKNOWN_BOOK,
+									identifier: barcode,
+									title: 'Error Fetching Data'
+								});
+							} else {
+								books.push(data);
+							}
 						}
 					}
 					if (err) {
