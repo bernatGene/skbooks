@@ -51,7 +51,6 @@ async def get_book_by_isbn(isbn: str):
     return await get_book_info_by_isbn(isbn)
 
 
-
 @app.get("/")
 async def root():
     return {"message": "Welcome to skbooks backend!"}
