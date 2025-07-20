@@ -4,35 +4,23 @@
 	import BookCard from '$lib/components/BookCard.svelte';
 	import BarcodeScanner from '$lib/components/BarcodeScanner.svelte';
 
-	const books = $state<BookInfo[]>([]);
+	const books = $state<Promise<BookInfo>[]>([]);
 	const scannedBarcodes = new Set<string>();
 	let scannedIsbn = $state('');
 
-	const UNKNOWN_BOOK: BookInfo = {
-		title: 'Unknown Title',
-		authors: ['Unknown Author'],
-		publisher: 'Unknown Publisher',
-		published_date: 'Unknown Date',
-		thumbnail: '/no-image-placeholder.svg',
-		identifier: ''
+	const fetchBookInfo = async (isbn: string): Promise<BookInfo> => {
+		const { data, error } = await getBookByIsbnGet({ path: { isbn: isbn } });
+		if (data) return data;
+		throw error;
 	};
+	let fetchInfo: null | Promise<BookInfo> = $state(null);
 
 	$effect(() => {
 		async function handleNewIsbn() {
 			if (scannedIsbn && !scannedBarcodes.has(scannedIsbn)) {
 				scannedBarcodes.add(scannedIsbn);
-				const { data, error } = await getBookByIsbnGet({ path: { isbn: scannedIsbn } });
-
-				if (error || !data) {
-					console.error('Error fetching book info:', error);
-					books.push({
-						...UNKNOWN_BOOK,
-						identifier: scannedIsbn,
-						title: 'Error Fetching Data'
-					});
-				} else {
-					books.push(data);
-				}
+				fetchInfo = fetchBookInfo(scannedIsbn);
+				books.push(fetchInfo);
 			}
 		}
 		handleNewIsbn();
@@ -49,7 +37,7 @@
 			<h2 class="mb-4 text-center text-2xl font-semibold">Scanned Books</h2>
 			<div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
 				{#each books as book}
-					<BookCard {book} />
+					<BookCard isbn={scannedIsbn} {book} />
 				{/each}
 			</div>
 		</div>
