@@ -7,6 +7,16 @@
 	let video: HTMLVideoElement;
 	let codeReader: BrowserMultiFormatReader;
 
+	function isIsbn13(ean: string): boolean {
+		/**
+		 * Checks if a 13-digit EAN string is an ISBN.
+		 */
+		if (ean.length !== 13 || !/^\d+$/.test(ean)) {
+			return false;
+		}
+		return ean.startsWith('978') || ean.startsWith('979');
+	}
+
 	onMount(() => {
 		const hints = new Map();
 		const formats = [BarcodeFormat.EAN_13];
@@ -17,7 +27,10 @@
 			try {
 				await codeReader.decodeFromVideoDevice(null, video, (result, err) => {
 					if (result) {
-						isbn = result.getText();
+						const resultNum = result.getText();
+						if (isIsbn13(resultNum)) {
+							isbn = resultNum;
+						}
 					}
 					if (err) {
 						// zxing-js throws NotFoundException pretty often, so we swallow up the error
