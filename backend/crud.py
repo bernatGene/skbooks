@@ -10,14 +10,22 @@ from models import (
     Author,
     Book,
     Bookcase,
+    BookcaseCreate,
+    BookcaseRead,
     BookcaseReadWithCounts,
+    BookcaseReadWithShelves,
+    BookcaseUpdate,
     BookCreate,
     BookRead,
     BookReadWithDetails,
     BookUpdate,
     Category,
     Shelf,
+    ShelfCreate,
+    ShelfRead,
     ShelfReadWithBookCount,
+    ShelfReadWithBooks,
+    ShelfUpdate,
 )
 
 router = APIRouter()
@@ -67,6 +75,157 @@ async def read_bookcases_with_counts(session: SessionDep):
         )
 
     return list(bookcases_map.values())
+
+
+@router.post("/bookcases/", response_model=BookcaseRead)
+async def create_bookcase(bookcase_in: BookcaseCreate, session: SessionDep):
+    """
+    Create a new bookcase.
+    """
+    db_bookcase = Bookcase.model_validate(bookcase_in)
+    session.add(db_bookcase)
+    await session.commit()
+    await session.refresh(db_bookcase)
+    return db_bookcase
+
+
+@router.get("/bookcases/{bookcase_id}", response_model=BookcaseReadWithShelves)
+async def read_bookcase(bookcase_id: int, session: SessionDep):
+    """
+    Retrieve a single bookcase by its ID with its shelves.
+    """
+    bookcase = await session.get(Bookcase, bookcase_id)
+    if not bookcase:
+        raise HTTPException(status_code=404, detail="Bookcase not found")
+    return bookcase
+
+
+@router.patch("/bookcases/{bookcase_id}", response_model=BookcaseRead)
+async def update_bookcase(
+    bookcase_id: int,
+    bookcase_in: BookcaseUpdate,
+    session: SessionDep,
+):
+    """
+    Update a bookcase's details.
+    """
+    db_bookcase = await session.get(Bookcase, bookcase_id)
+    if not db_bookcase:
+        raise HTTPException(status_code=404, detail="Bookcase not found")
+
+    bookcase_data = bookcase_in.model_dump(exclude_unset=True)
+    for key, value in bookcase_data.items():
+        setattr(db_bookcase, key, value)
+
+    session.add(db_bookcase)
+    await session.commit()
+    await session.refresh(db_bookcase)
+    return db_bookcase
+
+
+@router.delete("/bookcases/{bookcase_id}")
+async def delete_bookcase(bookcase_id: int, session: SessionDep):
+    """
+    Delete a bookcase.
+    """
+    # Note: This will fail if the bookcase has shelves due to FK constraints.
+    bookcase = await session.get(Bookcase, bookcase_id)
+    if not bookcase:
+        raise HTTPException(status_code=404, detail="Bookcase not found")
+    await session.delete(bookcase)
+    await session.commit()
+    return {"ok": True}
+
+
+# Shelf CRUD
+
+
+@router.post("/shelves/", response_model=ShelfRead)
+async def create_shelf(shelf_in: ShelfCreate, session: SessionDep):
+    """
+    Create a new shelf.
+    """
+    if shelf_in.bookcase_id:
+        bookcase = await session.get(Bookcase, shelf_in.bookcase_id)
+        if not bookcase:
+            raise HTTPException(
+                status_code=404, detail="Bookcase not found for this shelf"
+            )
+
+    db_shelf = Shelf.model_validate(shelf_in)
+    session.add(db_shelf)
+    await session.commit()
+    await session.refresh(db_shelf)
+    return db_shelf
+
+
+@router.get("/shelves/", response_model=list[ShelfRead])
+async def read_shelves(
+    session: SessionDep,
+    offset: int = 0,
+    limit: int = 100,
+):
+    """
+    Retrieve a list of shelves.
+    """
+    statement = select(Shelf).offset(offset).limit(limit)
+    result = await session.exec(statement)
+    shelves = result.all()
+    return shelves
+
+
+@router.get("/shelves/{shelf_id}", response_model=ShelfReadWithBooks)
+async def read_shelf(shelf_id: int, session: SessionDep):
+    """
+    Retrieve a single shelf by its ID with its books.
+    """
+    shelf = await session.get(Shelf, shelf_id)
+    if not shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+    return shelf
+
+
+@router.patch("/shelves/{shelf_id}", response_model=ShelfRead)
+async def update_shelf(
+    shelf_id: int,
+    shelf_in: ShelfUpdate,
+    session: SessionDep,
+):
+    """
+    Update a shelf's details.
+    """
+    db_shelf = await session.get(Shelf, shelf_id)
+    if not db_shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+
+    shelf_data = shelf_in.model_dump(exclude_unset=True)
+
+    if "bookcase_id" in shelf_data and shelf_data["bookcase_id"] is not None:
+        bookcase = await session.get(Bookcase, shelf_data["bookcase_id"])
+        if not bookcase:
+            raise HTTPException(status_code=404, detail="Bookcase not found")
+
+    for key, value in shelf_data.items():
+        setattr(db_shelf, key, value)
+
+    session.add(db_shelf)
+    await session.commit()
+    await session.refresh(db_shelf)
+    return db_shelf
+
+
+@router.delete("/shelves/{shelf_id}")
+async def delete_shelf(shelf_id: int, session: SessionDep):
+    """
+    Delete a shelf.
+    """
+    # Note: This will fail if there are books on the shelf due to FK constraints.
+    shelf = await session.get(Shelf, shelf_id)
+    if not shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+    await session.delete(shelf)
+    await session.commit()
+    return {"ok": True}
 
 
 @router.post("/books/", response_model=BookReadWithDetails)
