@@ -94,7 +94,7 @@
 		</div>
 
 		<!-- Floor Container -->
-		<div class="w-full flex-shrink-0 px-16 pt-0 pb-8">
+		<div class="w-full flex-shrink-0 px-0 pt-0 pb-8">
 			<div class="floor-line relative w-full"></div>
 		</div>
 	</main>
