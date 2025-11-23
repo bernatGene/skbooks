@@ -1,26 +1,8 @@
 <script lang="ts">
-	import type { BookcaseReadWithCounts } from '$lib/client/types.gen';
 	import Bookcase from '$lib/components/Bookcase.svelte';
+	import { enhance } from '$app/forms';
 
-	const bookcases = $state<BookcaseReadWithCounts[]>([
-		{
-			id: 1,
-			name: 'Living Room',
-			shelves: [
-				{ id: 1, number: 1, bookcase_id: 1, book_count: 12 },
-				{ id: 2, number: 2, bookcase_id: 1, book_count: 23 },
-				{ id: 3, number: 3, bookcase_id: 1, book_count: 5 }
-			]
-		},
-		{
-			id: 2,
-			name: 'Office',
-			shelves: [
-				{ id: 4, number: 1, bookcase_id: 2, book_count: 30 },
-				{ id: 5, number: 2, bookcase_id: 2, book_count: 18 }
-			]
-		}
-	]);
+	const { data } = $props<import('./$types').PageData>();
 
 	let editingBookcaseId = $state<number | null>(null);
 
@@ -30,16 +12,6 @@
 
 	function stopEditing() {
 		editingBookcaseId = null;
-	}
-
-	function createNewBookcase() {
-		const newBookcase: BookcaseReadWithCounts = {
-			id: Date.now(), // Temporary ID
-			name: 'New Bookcase',
-			shelves: [{ id: Date.now() + 1, number: 1, bookcase_id: Date.now(), book_count: 0 }]
-		};
-		bookcases.push(newBookcase);
-		editingBookcaseId = newBookcase.id;
 	}
 </script>
 
@@ -51,7 +23,7 @@
 	<main class="flex flex-grow flex-col justify-end overflow-hidden">
 		<div class="flex items-end gap-12 overflow-x-auto px-16 pb-0">
 			<!-- Bookcases -->
-			{#each bookcases as bookcase (bookcase.id)}
+			{#each data.bookcases as bookcase (bookcase.id)}
 				<div class="relative">
 					<Bookcase {bookcase} isEditing={editingBookcaseId === bookcase.id} />
 					{#if editingBookcaseId === bookcase.id}
@@ -73,24 +45,24 @@
 			{/each}
 
 			<!-- Ghost Bookcase -->
-			<div
+			<form
+				method="POST"
+				action="?/createBookcase"
+				use:enhance
 				class="group flex-shrink-0 cursor-pointer"
-				onclick={createNewBookcase}
-				onkeypress={createNewBookcase}
-				role="button"
-				tabindex="0"
 			>
-				<div
+				<button
+					type="submit"
 					class="relative w-64 rounded-t-lg border-x-4 border-t-4 border-dashed border-[#a1887f] bg-transparent p-3 text-[#a1887f] group-hover:border-[#5d4037] group-hover:text-[#5d4037]"
 				>
 					<h2 class="text-center text-2xl font-bold">New Bookcase</h2>
-				</div>
+				</button>
 				<div
 					class="flex h-24 w-64 items-center justify-center border-4 border-dashed border-[#a1887f] bg-transparent text-[#a1887f] group-hover:border-[#5d4037] group-hover:text-[#5d4037]"
 				>
 					<span class="icon-[mdi--plus] size-10"></span>
 				</div>
-			</div>
+			</form>
 		</div>
 
 		<!-- Floor Container -->
