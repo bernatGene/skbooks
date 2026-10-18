@@ -65,3 +65,5 @@ MANIFEST
 *.manifest
 *.spec
 
+
+PLAN_*.md
