@@ -33,92 +33,199 @@
 	}
 
 	function createNewBookcase() {
+		const id = Date.now();
 		const newBookcase: BookcaseReadWithCounts = {
-			id: Date.now(), // Temporary ID
+			id,
 			name: 'New Bookcase',
-			shelves: [{ id: Date.now() + 1, number: 1, bookcase_id: Date.now(), book_count: 0 }]
+			shelves: [{ id: id + 1, number: 1, bookcase_id: id, book_count: 0 }]
 		};
 		bookcases.push(newBookcase);
-		editingBookcaseId = newBookcase.id;
+		editingBookcaseId = id;
 	}
 </script>
 
-<div class="flex h-full flex-col bg-[#faf3e0] font-sans text-[#5d4037]">
-	<header class="p-6 text-center">
-		<h1 class="text-5xl font-bold">škbooks</h1>
+<div class="page">
+	<header class="header">
+		<div class="title-block">
+			<h1>škbooks</h1>
+			<span class="subtitle">library floor plan</span>
+		</div>
 	</header>
 
-	<main class="flex flex-grow flex-col justify-end overflow-hidden">
-		<div class="flex items-end gap-12 overflow-x-auto px-16 pb-0">
-			<!-- Bookcases -->
+	<main class="stage">
+		<div class="row">
 			{#each bookcases as bookcase (bookcase.id)}
-				<div class="relative">
-					<Bookcase {bookcase} isEditing={editingBookcaseId === bookcase.id} />
-					{#if editingBookcaseId === bookcase.id}
-						<button
-							onclick={stopEditing}
-							class="absolute -top-4 -right-4 rounded-full bg-green-200 p-2 text-green-800"
-						>
-							<span class="icon-[mdi--check] size-6">Done</span>
-						</button>
-					{:else}
-						<button
-							onclick={() => startEditing(bookcase.id)}
-							class="absolute -top-4 -right-4 rounded-full bg-blue-200 p-2 text-blue-800 opacity-0 transition-opacity hover:opacity-100"
-						>
-							<span class="icon-[mdi--pencil] size-6">Edit</span>
-						</button>
-					{/if}
+				{@const isEditing = editingBookcaseId === bookcase.id}
+				<div class="slot" class:editing={isEditing}>
+					<Bookcase {bookcase} {isEditing} />
+					<div class="toolbar">
+						{#if isEditing}
+							<button type="button" class="tool" onclick={stopEditing} aria-label="Done">
+								<span class="icon-[mdi--check] size-4" aria-hidden="true"></span>
+							</button>
+						{:else}
+							<button
+								type="button"
+								class="tool"
+								onclick={() => startEditing(bookcase.id)}
+								aria-label="Edit bookcase"
+							>
+								<span class="icon-[mdi--pencil] size-4" aria-hidden="true"></span>
+							</button>
+							<a class="tool" href="/scanner" aria-label="Search books">
+								<span class="icon-[mdi--magnify] size-4" aria-hidden="true"></span>
+							</a>
+						{/if}
+					</div>
 				</div>
 			{/each}
 
-			<!-- Ghost Bookcase -->
-			<div
-				class="group flex-shrink-0 cursor-pointer"
-				onclick={createNewBookcase}
-				onkeypress={createNewBookcase}
-				role="button"
-				tabindex="0"
-			>
-				<div
-					class="relative w-64 rounded-t-lg border-x-4 border-t-4 border-dashed border-[#a1887f] bg-transparent p-3 text-[#a1887f] group-hover:border-[#5d4037] group-hover:text-[#5d4037]"
-				>
-					<h2 class="text-center text-2xl font-bold">New Bookcase</h2>
-				</div>
-				<div
-					class="flex h-24 w-64 items-center justify-center border-4 border-dashed border-[#a1887f] bg-transparent text-[#a1887f] group-hover:border-[#5d4037] group-hover:text-[#5d4037]"
-				>
-					<span class="icon-[mdi--plus] size-10"></span>
-				</div>
-			</div>
+			<button type="button" class="ghost-case" onclick={createNewBookcase}>
+				<span class="icon-[mdi--plus] size-7" aria-hidden="true"></span>
+				<span class="ghost-label">create new bookcase</span>
+			</button>
 		</div>
 
-		<!-- Floor Container -->
-		<div class="w-full flex-shrink-0 px-0 pt-0 pb-8">
-			<div class="floor-line relative w-full"></div>
-		</div>
+		<div class="floor"></div>
 	</main>
 </div>
 
 <style>
-	.floor-line {
-		border-top: 4px solid #5d4037;
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
 	}
-	.floor-line::after {
+
+	.header {
+		padding: 1.25rem 2rem;
+		border-bottom: 1px solid rgba(93, 64, 55, 0.18);
+	}
+	.title-block {
+		display: flex;
+		align-items: baseline;
+		gap: 0.75rem;
+	}
+	.title-block h1 {
+		font-size: 1.75rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+	.subtitle {
+		font-size: 0.8rem;
+		color: #a1887f;
+		letter-spacing: 0.08em;
+	}
+
+	.stage {
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		overflow: hidden;
+		padding-bottom: 1.5rem;
+		background-image:
+			linear-gradient(to right, rgba(93, 64, 55, 0.05) 1px, transparent 1px),
+			linear-gradient(to bottom, rgba(93, 64, 55, 0.05) 1px, transparent 1px);
+		background-size: 24px 24px;
+	}
+
+	.row {
+		display: flex;
+		align-items: flex-end;
+		gap: 2.5rem;
+		overflow-x: auto;
+		padding: 2rem 2rem 0;
+	}
+
+	.slot {
+		position: relative;
+		flex-shrink: 0;
+	}
+	.toolbar {
+		position: absolute;
+		top: -2.25rem;
+		right: 0;
+		display: flex;
+		gap: 0.375rem;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.15s ease;
+	}
+	.slot:hover .toolbar,
+	.slot.editing .toolbar {
+		opacity: 1;
+		pointer-events: auto;
+	}
+	.tool {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border: 1px solid #5d4037;
+		border-radius: 9999px;
+		background: #faf3e0;
+		color: #5d4037;
+		transition:
+			background 0.15s,
+			color 0.15s;
+	}
+	.tool:hover {
+		background: #5d4037;
+		color: #faf3e0;
+	}
+
+	.ghost-case {
+		flex-shrink: 0;
+		width: 16rem;
+		min-height: 5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 1rem;
+		border: 2px dashed #a1887f;
+		border-bottom: none;
+		border-radius: 4px 4px 0 0;
+		background: transparent;
+		color: #a1887f;
+		cursor: pointer;
+		transition:
+			border-color 0.15s,
+			color 0.15s;
+	}
+	.ghost-case:hover {
+		border-color: #5d4037;
+		color: #5d4037;
+	}
+	.ghost-label {
+		font-size: 0.8rem;
+		letter-spacing: 0.03em;
+	}
+
+	.floor {
+		border-top: 2px solid #5d4037;
+		position: relative;
+		flex-shrink: 0;
+	}
+	.floor::after {
 		content: '';
 		position: absolute;
 		top: 100%;
 		left: 0;
 		right: 0;
-		height: 1rem;
+		height: 1.5rem;
 		background-image: repeating-linear-gradient(
 			-45deg,
 			transparent,
-			transparent 6px,
-			#a1887f 6px,
-			#a1887f 8px
+			transparent 5px,
+			#a1887f 5px,
+			#a1887f 7px
 		);
-		opacity: 0.6;
+		opacity: 0.5;
 		mask-image: linear-gradient(to bottom, black, transparent);
+		-webkit-mask-image: linear-gradient(to bottom, black, transparent);
 	}
 </style>

@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import random
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
@@ -8,6 +10,46 @@ from models import BookInfo
 from settings import settings
 
 logger = logging.getLogger(__name__)
+
+_RETRY_STATUSES = {500, 502, 503, 504}
+_MAX_ATTEMPTS = 3
+_BACKOFF_BASE = 0.5
+_BACKOFF_MAX = 5.0
+
+
+async def _get_with_retry(
+    client: httpx.AsyncClient, url: str
+) -> httpx.Response:
+    for attempt in range(_MAX_ATTEMPTS):
+        try:
+            response = await client.get(url)
+        except httpx.RequestError as e:
+            if attempt == _MAX_ATTEMPTS - 1:
+                raise
+            wait = min(_BACKOFF_BASE * 2**attempt, _BACKOFF_MAX)
+            logger.warning(
+                f"Request error for {url}, retrying in {wait:.2f}s: {e}"
+            )
+            await asyncio.sleep(wait + random.uniform(0, 0.25))
+            continue
+
+        if response.status_code < 500 or attempt == _MAX_ATTEMPTS - 1:
+            response.raise_for_status()
+            return response
+
+        wait = min(_BACKOFF_BASE * 2**attempt, _BACKOFF_MAX)
+        retry_after = response.headers.get("Retry-After")
+        if retry_after:
+            try:
+                wait = max(wait, float(retry_after))
+            except ValueError:
+                pass
+        logger.warning(
+            f"Got {response.status_code} for {url}, retrying in {wait:.2f}s"
+        )
+        await asyncio.sleep(wait + random.uniform(0, 0.25))
+
+    raise RuntimeError("unreachable")
 
 
 UNKNOWN_BOOK = BookInfo(
@@ -33,8 +75,7 @@ async def get_book_info_by_isbn(isbn: str) -> BookInfo:
     async with httpx.AsyncClient() as client:
         try:
             logger.debug(f"Requesting URL: {url}")
-            response = await client.get(url)
-            response.raise_for_status()
+            response = await _get_with_retry(client, url)
             data = response.json()
             logger.debug(f"Initial response data: {data}")
 
@@ -51,7 +92,7 @@ async def get_book_info_by_isbn(isbn: str) -> BookInfo:
             # 2. Fetch the specific volume by its ID for complete data
             volume_url = f"https://www.googleapis.com/books/v1/volumes/{volume_id}?key={settings.GOOGLE_API_KEY}"
             logger.debug(f"Requesting volume URL: {volume_url}")
-            volume_response = await client.get(volume_url)
+            volume_response = await _get_with_retry(client, volume_url)
             volume_data = volume_response.json()
             logger.debug(f"Detailed volume data: {volume_data}")
 
@@ -80,7 +121,7 @@ async def get_book_info_by_isbn(isbn: str) -> BookInfo:
                 if book_id:
                     scrape_url = f"https://books.google.es/books?id={book_id}&hl=en"
                     logger.debug(f"Scraping URL: {scrape_url}")
-                    scrape_response = await client.get(scrape_url)
+                    scrape_response = await _get_with_retry(client, scrape_url)
                     soup = BeautifulSoup(scrape_response.content, "html.parser")
                     if table := soup.find("table", id="metadata_content_table"):
                         for row in table.find_all("tr", class_="metadata_row"):
